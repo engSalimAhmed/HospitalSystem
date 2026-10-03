@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نظام مستشفى الأمل التخصصي</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --bg: #070d19; --card: rgba(16, 26, 47, 0.75); --border: rgba(255, 255, 255, 0.1);
+      --cyan: #38bdf8; --text: #f8fafc; --text-dim: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 20px; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    
+    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; }
+    h1 { font-size: 1.8rem; font-weight: 800; color: var(--cyan); }
+    
+    .btn { background: var(--cyan); color: #000; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    .btn:hover { opacity: 0.9; }
+    
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px; }
+    .stat-box { background: var(--card); border: 1px solid var(--border); padding: 18px; border-radius: 12px; }
+    .stat-val { font-size: 1.8rem; font-weight: 800; margin-top: 5px; }
+
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: right; }
+    th, td { padding: 14px 18px; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-dim); }
+
+    .actions { display: flex; gap: 8px; }
+    .btn-sm { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: #fff; cursor: pointer; }
+    .btn-sm:hover { background: rgba(255,255,255,0.15); }
+
+    /* Modal */
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; padding: 15px; }
+    .modal.open { display: flex; }
+    .modal-body { background: #111d33; border: 1px solid var(--border); padding: 25px; border-radius: 14px; width: 100%; max-width: 450px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 0.85rem; margin-bottom: 5px; color: var(--text-dim); }
+    .form-group input, .form-group select { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: #070d19; color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>مستشفى الأمل التخصصي</h1>
+        <p style="color: var(--text-dim);">لوحة التحكم الطبية وقاعدة بيانات المرضى والفواتير</p>
+      </div>
+      <button class="btn" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> إضافة مريض جديد</button>
+    </header>
+
+    <div class="stats">
+      <div class="stat-box"><div>إجمالي المرضى</div><div class="stat-val" id="total-patients">0</div></div>
+      <div class="stat-box"><div>رسوم الكشف الأساسية</div><div class="stat-val" style="color: #10b981;">$50.00</div></div>
+    </div>
+
+    <div class="card">
+      <table>
+        <thead>
+          <tr>
+            <th>الرقم</th>
+            <th>الاسم</th>
+            <th>العمر / الجنس</th>
+            <th>القسم</th>
+            <th>التشخيص</th>
+            <th>الإجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- نافذة إضافة مريض -->
+  <div class="modal" id="add-modal">
+    <div class="modal-body">
+      <h3 style="margin-bottom: 15px;">تسجيل مريض جديد</h3>
+      <div class="form-group"><label>الاسم الكامل</label><input type="text" id="m-name" /></div>
+      <div class="form-group"><label>العمر</label><input type="number" id="m-age" value="30" /></div>
+      <div class="form-group"><label>الجنس</label>
+        <select id="m-gender"><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option></select>
+      </div>
+      <div class="form-group"><label>القسم</label>
+        <select id="m-dept"><option value="Cardiology">قلب (Cardiology)</option><option value="Neurology">أعصاب (Neurology)</option><option value="General">عام (General)</option></select>
+      </div>
+      <div class="form-group"><label>التشخيص الطبي</label><input type="text" id="m-cond" /></div>
+      <div style="display:flex; gap:10px; margin-top:15px;">
+        <button class="btn" style="flex:1;" onclick="submitNewPatient()">حفظ في السيرفر</button>
+        <button class="btn-sm" onclick="closeModal()">إلغاء</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadPatients() {
+      const res = await fetch('/api/patients');
+      const data = await res.json();
+      document.getElementById('total-patients').innerText = data.length;
+      const tbody = document.getElementById('table-body');
+      tbody.innerHTML = '';
+      
+      data.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>#${p.id}</td>
+          <td><strong>${p.name}</strong></td>
+          <td>${p.age} • ${p.gender}</td>
+          <td>${p.department}</td>
+          <td>${p.condition}</td>
+          <td>
+            <div class="actions">
+              <button class="btn-sm" title="حساب الفاتورة (CalculateBill)" onclick="calcBill(${p.id})"><i class="fa-solid fa-calculator"></i></button>
+              <button class="btn-sm" title="نسخ المريض (Copy Constructor)" onclick="clonePatient(${p.id}, '${p.name}')"><i class="fa-solid fa-copy"></i></button>
+              <button class="btn-sm" style="color: #f43f5e;" title="حذف" onclick="deletePatient(${p.id})"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function submitNewPatient() {
+      const payload = {
+        name: document.getElementById('m-name').value,
+        age: parseInt(document.getElementById('m-age').value),
+        gender: document.getElementById('m-gender').value,
+        department: document.getElementById('m-dept').value,
+        condition: document.getElementById('m-cond').value
+      };
+      await fetch('/api/patients', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      closeModal();
+      loadPatients();
+    }
+
+    async function clonePatient(id, name) {
+      const newName = prompt("مشيد النسخ (Copy Constructor) - أدخل اسم النسخة:", name + " (نسخة)");
+      if (!newName) return;
+      await fetch(`/api/patients/${id}/clone`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newName, newCondition: "مستقرة (Stable)" })
+      });
+      loadPatients();
+    }
+
+    async function calcBill(id) {
+      const days = prompt("كم عدد أيام الإقامة؟", "4");
+      if (!days) return;
+      const res = await fetch(`/api/patients/${id}/bill`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ days: parseInt(days) })
+      });
+      const bill = await res.json();
+      alert(`فاتورة المريض: ${bill.patientName}\n` +
+            `عدد الأيام: ${bill.days} يوم (سعر اليوم: $${bill.dailyRate})\n` +
+            `رسوم الكشف: $${bill.consultationFee}\n` +
+            `------------------------\n` +
+            `المجموع الإجمالي: $${bill.total}`);
+    }
+
+    async function deletePatient(id) {
+      if (confirm(`هل أنت متأكد من حذف السجل رقم #${id}؟`)) {
+        await fetch(`/api/patients/${id}`, { method: 'DELETE' });
+        loadPatients();
+      }
+    }
+
+    function openAddModal() { document.getElementById('add-modal').classList.add('open'); }
+    function closeModal() { document.getElementById('add-modal').classList.remove('open'); }
+
+    loadPatients();
+  </script>
+</body>
+</html>
