@@ -1,126 +1,144 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hospital OS</title>
+  <title>نظام إدارة المستشفيات الشامل — Hospital OS</title>
+
+  <!-- خطوط وأيقونات احترافية -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
   <style>
     :root {
-      --primary: #38bdf8; --secondary: #6366f1; --bg-dark: #070d19;
-      --glass-base: rgba(16, 26, 47, 0.65); --glass-surface: rgba(23, 37, 66, 0.85);
-      --glass-border: rgba(255, 255, 255, 0.08); --text-main: #f8fafc; --text-muted: #94a3b8;
-      --radius-md: 14px; --radius-xl: 26px;
+      --primary: #38bdf8;
+      --secondary: #6366f1;
+      --bg-dark: #070d19;
+      --glass-base: rgba(16, 26, 47, 0.72);
+      --glass-surface: rgba(23, 37, 66, 0.85);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 26px;
+      --shadow-glass: 0 16px 40px -10px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.12);
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', 'Cairo', sans-serif; }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', 'Plus Jakarta Sans', sans-serif; }
     body { background-color: var(--bg-dark); color: var(--text-main); min-height: 100vh; display: flex; overflow-x: hidden; }
+
     .glow-zone { position: fixed; border-radius: 50%; filter: blur(120px); pointer-events: none; opacity: 0.35; z-index: 0; }
     .glow-1 { top: -100px; left: -100px; width: 500px; height: 500px; background: var(--primary); }
     .glow-2 { bottom: -150px; right: -50px; width: 600px; height: 600px; background: var(--secondary); }
-    #canvas-viewport { position: fixed; top: 0; right: 0; width: 45vw; height: 100vh; pointer-events: none; z-index: 1; opacity: 0.85; }
+    #canvas-viewport { position: fixed; top: 0; left: 0; width: 45vw; height: 100vh; pointer-events: none; z-index: 1; opacity: 0.8; }
 
+    /* Navigation */
     .glass-nav {
-      width: 280px; height: 100vh; position: sticky; top: 0; z-index: 10;
-      background: var(--glass-base); backdrop-filter: blur(28px);
-      border-right: 1px solid var(--glass-border); padding: 32px 24px;
-      display: flex; flex-direction: column; gap: 32px;
+      width: 290px; height: 100vh; position: sticky; top: 0; z-index: 10;
+      background: var(--glass-base); backdrop-filter: blur(28px); -webkit-backdrop-filter: blur(28px);
+      border-left: 1px solid var(--glass-border); padding: 28px 20px;
+      display: flex; flex-direction: column; gap: 26px;
     }
-    [dir="rtl"] .glass-nav { border-right: none; border-left: 1px solid var(--glass-border); }
+    [dir="ltr"] .glass-nav { border-left: none; border-right: 1px solid var(--glass-border); }
 
     .brand-cluster { display: flex; align-items: center; gap: 14px; }
     .brand-icon {
-      width: 44px; height: 44px; border-radius: var(--radius-md);
+      width: 46px; height: 46px; border-radius: var(--radius-md);
       background: linear-gradient(135deg, var(--primary), var(--secondary));
-      display: grid; place-items: center; font-size: 20px; color: #fff;
+      display: grid; place-items: center; font-size: 22px; color: #fff;
     }
-    .brand-title { font-size: 1.05rem; font-weight: 700; }
-    .brand-sub { font-size: 0.72rem; color: var(--primary); text-transform: uppercase; }
+    .brand-title { font-size: 1.1rem; font-weight: 800; }
+    .brand-sub { font-size: 0.75rem; color: var(--primary); font-weight: 700; }
 
-    .nav-stack { display: flex; flex-direction: column; gap: 8px; list-style: none; }
+    .nav-stack { display: flex; flex-direction: column; gap: 6px; list-style: none; overflow-y: auto; }
     .nav-item {
-      display: flex; align-items: center; gap: 14px; padding: 12px 18px;
-      border-radius: var(--radius-md); color: var(--text-muted); font-size: 0.92rem; font-weight: 600;
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+      border-radius: var(--radius-md); color: var(--text-muted); font-size: 0.92rem; font-weight: 700;
       cursor: pointer; transition: 0.2s;
     }
     .nav-item:hover, .nav-item.active { background: rgba(255, 255, 255, 0.06); color: var(--text-main); }
-    .nav-item.active { border-left: 3px solid var(--primary); background: rgba(56, 189, 248, 0.1); }
-    [dir="rtl"] .nav-item.active { border-left: none; border-right: 3px solid var(--primary); }
+    .nav-item.active { border-right: 3px solid var(--primary); background: rgba(56, 189, 248, 0.12); }
+    [dir="ltr"] .nav-item.active { border-right: none; border-left: 3px solid var(--primary); }
 
-    .app-viewport { flex: 1; padding: 36px 44px; position: relative; z-index: 5; overflow-y: auto; }
-    .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px; }
-    .view-title h1 { font-size: 1.85rem; font-weight: 800; margin-bottom: 4px; }
+    .app-viewport { flex: 1; padding: 32px 40px; position: relative; z-index: 5; overflow-y: auto; }
+    .view-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; }
+    .view-title h1 { font-size: 1.85rem; font-weight: 900; margin-bottom: 4px; }
     .view-title p { color: var(--text-muted); font-size: 0.9rem; }
 
     .btn {
-      display: inline-flex; align-items: center; gap: 10px; padding: 12px 22px;
+      display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px;
       border-radius: var(--radius-md); font-size: 0.88rem; font-weight: 700;
       cursor: pointer; border: 1px solid transparent; transition: 0.2s;
     }
     .btn-primary { background: linear-gradient(135deg, var(--primary), #0284c7); color: #04101e; }
     .btn-glass { background: var(--glass-base); border: 1px solid var(--glass-border); color: var(--text-main); }
 
-    .telemetry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 18px; margin-bottom: 32px; }
+    .telemetry-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 30px; }
     .glass-tile {
-      background: var(--glass-base); backdrop-filter: blur(20px);
-      border: 1px solid var(--glass-border); border-radius: 18px; padding: 22px;
+      background: var(--glass-base); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border); border-radius: var(--radius-lg); padding: 20px; box-shadow: var(--shadow-glass);
     }
-    .tile-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); }
-    .tile-value { font-size: 2.1rem; font-weight: 800; }
+    .tile-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.82rem; font-weight: 700; color: var(--text-muted); }
+    .tile-value { font-size: 2rem; font-weight: 900; font-family: 'Plus Jakarta Sans', sans-serif; }
 
-    .deck-bar { display: flex; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+    /* Sections Tabs Content */
+    .module-section { display: none; }
+    .module-section.active { display: block; }
+
+    .deck-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
     .search-wrap { position: relative; flex: 1; min-width: 240px; }
-    .search-wrap i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
-    [dir="rtl"] .search-wrap i { left: auto; right: 16px; }
+    .search-wrap i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); }
+    [dir="ltr"] .search-wrap i { right: auto; left: 14px; }
     .input-field {
       width: 100%; background: var(--glass-base); backdrop-filter: blur(14px);
       border: 1px solid var(--glass-border); border-radius: var(--radius-md);
-      padding: 12px 16px 12px 44px; color: var(--text-main); font-size: 0.9rem; outline: none;
+      padding: 12px 42px 12px 16px; color: var(--text-main); font-size: 0.9rem; outline: none;
     }
-    [dir="rtl"] .input-field { padding: 12px 44px 12px 16px; }
+    [dir="ltr"] .input-field { padding: 12px 16px 12px 42px; }
     select.input-field { max-width: 220px; }
 
     .glass-table-deck {
       background: var(--glass-base); backdrop-filter: blur(24px);
-      border: 1px solid var(--glass-border); border-radius: var(--radius-xl); overflow: hidden;
+      border: 1px solid var(--glass-border); border-radius: var(--radius-xl); overflow-x: auto;
     }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    [dir="rtl"] table { text-align: right; }
-    th { padding: 18px 24px; font-size: 0.78rem; text-transform: uppercase; color: var(--text-muted); border-bottom: 1px solid var(--glass-border); }
-    td { padding: 18px 24px; font-size: 0.9rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03); }
+    table { width: 100%; border-collapse: collapse; text-align: right; }
+    [dir="ltr"] table { text-align: left; }
+    th { padding: 16px 20px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); border-bottom: 1px solid var(--glass-border); }
+    td { padding: 16px 20px; font-size: 0.9rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03); }
     tbody tr:hover { background-color: rgba(255, 255, 255, 0.035); }
 
     .tag-dept {
-      display: inline-block; padding: 4px 12px; border-radius: 20px;
+      display: inline-block; padding: 4px 10px; border-radius: 20px;
       font-size: 0.75rem; font-weight: 700; background: rgba(99, 102, 241, 0.15);
       color: #a5b4fc; border: 1px solid rgba(99, 102, 241, 0.3);
     }
-    .action-group { display: flex; gap: 8px; }
+    .action-group { display: flex; gap: 6px; }
     .icon-button {
-      width: 34px; height: 34px; border-radius: 8px;
-      display: grid; place-items: center; background: rgba(255, 255, 255, 0.04);
+      width: 32px; height: 32px; border-radius: 8px;
+      display: grid; place-items: center; background: rgba(255, 255, 255, 0.05);
       color: var(--text-muted); cursor: pointer; border: none;
     }
-    .icon-button:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.12); }
+    .icon-button:hover { color: #fff; background: rgba(255, 255, 255, 0.15); }
 
     .veil {
       position: fixed; inset: 0; background: rgba(3, 7, 18, 0.75);
-      backdrop-filter: blur(8px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 20px;
+      backdrop-filter: blur(8px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 16px;
     }
     .veil.open { display: flex; }
     .modal-frame {
       background: var(--glass-surface); border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: var(--radius-xl); width: 100%; max-width: 500px; padding: 30px;
+      border-radius: var(--radius-xl); width: 100%; max-width: 500px; padding: 28px; box-shadow: var(--shadow-glass);
     }
-    .modal-head { font-size: 1.25rem; font-weight: 700; margin-bottom: 18px; display: flex; justify-content: space-between; }
+    .modal-head { font-size: 1.25rem; font-weight: 800; margin-bottom: 18px; display: flex; justify-content: space-between; }
 
     @media (max-width: 900px) {
       #canvas-viewport { display: none; }
       body { flex-direction: column; }
-      .glass-nav { width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--glass-border); padding: 18px 20px; }
+      .glass-nav { width: 100%; height: auto; border-left: none; border-bottom: 1px solid var(--glass-border); padding: 16px 20px; }
       .nav-stack { flex-direction: row; overflow-x: auto; }
       .app-viewport { padding: 20px; }
     }
@@ -132,200 +150,284 @@
   <div class="glow-zone glow-2"></div>
   <div id="canvas-viewport"></div>
 
+  <!-- القائمة الجانبية المليئة بكافة أقسام المستشفى -->
   <aside class="glass-nav">
     <div class="brand-cluster">
       <div class="brand-icon"><i class="fa-solid fa-hospital-user"></i></div>
       <div>
-        <div class="brand-title" id="dyn-brand-name">Al-Amal Hospital</div>
-        <div class="brand-sub">Universal Hospital OS</div>
+        <div class="brand-title" id="dyn-brand-name">مستشفى الأمل التخصصي</div>
+        <div class="brand-sub">نظام Hospital OS الشامل</div>
       </div>
     </div>
     <ul class="nav-stack">
-      <li class="nav-item active"><i class="fa-solid fa-chart-pie"></i> <span>Dashboard</span></li>
-      <li class="nav-item" onclick="openAdmissionModal()"><i class="fa-solid fa-user-plus"></i> <span>New Patient</span></li>
-      <li class="nav-item" onclick="openConfigModal()"><i class="fa-solid fa-sliders"></i> <span>Hospital Setup</span></li>
+      <li class="nav-item active" onclick="switchTab('tab-patients', this)"><i class="fa-solid fa-bed-pulse"></i> <span>سجلات المرضى</span></li>
+      <li class="nav-item" onclick="switchTab('tab-pharmacy', this)"><i class="fa-solid fa-pills"></i> <span>الصيدلية والتجميل</span></li>
+      <li class="nav-item" onclick="switchTab('tab-lab', this)"><i class="fa-solid fa-flask-vial"></i> <span>المختبر والتحاليل</span></li>
+      <li class="nav-item" onclick="switchTab('tab-nursing', this)"><i class="fa-solid fa-user-nurse"></i> <span>التمريض المنزلي</span></li>
+      <li class="nav-item" onclick="openConfigModal()"><i class="fa-solid fa-sliders"></i> <span>إعدادات وهوية المستشفى</span></li>
     </ul>
   </aside>
 
+  <!-- منطقة العمل الرئيسية -->
   <main class="app-viewport">
     <header class="view-header">
       <div class="view-title">
-        <h1 id="dyn-view-title">Al-Amal Specialized Hospital</h1>
-        <p>Universal Clinical & Inpatient Telemetry</p>
+        <h1 id="dyn-view-title">مستشفى الأمل التخصصي</h1>
+        <p>منصة سريرية متكاملة لجميع الأقسام الطبية، الفواتير، والأطباء المناوبين</p>
       </div>
-      <div style="display:flex; gap:12px;">
-        <button class="btn btn-glass" onclick="toggleLocalization()"><i class="fa-solid fa-globe"></i> <span id="lbl-lang">العربية</span></button>
-        <button class="btn btn-primary" onclick="openAdmissionModal()"><i class="fa-solid fa-user-plus"></i> <span id="lbl-admit">New Admission</span></button>
+      <div style="display:flex; gap:10px;">
+        <button class="btn btn-glass" onclick="toggleLocalization()"><i class="fa-solid fa-globe"></i> <span id="lbl-lang">English</span></button>
+        <button class="btn btn-primary" onclick="openAdmissionModal()"><i class="fa-solid fa-user-plus"></i> <span>تنويم مريض جديد</span></button>
       </div>
     </header>
 
+    <!-- بطاقات الإحصائيات الشاملة -->
     <section class="telemetry-grid">
       <div class="glass-tile">
-        <div class="tile-label"><span>Total Patients</span><i class="fa-solid fa-users"></i></div>
+        <div class="tile-label"><span>إجمالي المرضى</span><i class="fa-solid fa-users"></i></div>
         <div class="tile-value" id="st-patients">0</div>
       </div>
       <div class="glass-tile">
-        <div class="tile-label"><span>Active Units</span><i class="fa-solid fa-building-columns"></i></div>
-        <div class="tile-value" id="st-depts">0</div>
-      </div>
-      <div class="glass-tile">
-        <div class="tile-label"><span>Doctors On Duty</span><i class="fa-solid fa-user-doctor"></i></div>
+        <div class="tile-label"><span>أطباء مناوبين</span><i class="fa-solid fa-user-doctor"></i></div>
         <div class="tile-value" id="st-doctors">0</div>
       </div>
       <div class="glass-tile">
-        <div class="tile-label"><span>Total Revenue</span><i class="fa-solid fa-receipt"></i></div>
+        <div class="tile-label"><span>تحاليل بالانتظار</span><i class="fa-solid fa-vial"></i></div>
+        <div class="tile-value" id="st-labs">0</div>
+      </div>
+      <div class="glass-tile">
+        <div class="tile-label"><span>إجمالي الإيرادات</span><i class="fa-solid fa-receipt"></i></div>
         <div class="tile-value" id="st-revenue">$0</div>
       </div>
     </section>
 
-    <div class="deck-bar">
-      <div class="search-wrap">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="patient-search" class="input-field" placeholder="Search by name or condition..." oninput="refreshPatients()">
+    <!-- 1. قسم المرضى (سجلات، فواتير، نسخ) -->
+    <section id="tab-patients" class="module-section active">
+      <div class="deck-bar">
+        <div class="search-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="patient-search" class="input-field" placeholder="البحث بالاسم أو التشخيص الطبي..." oninput="refreshPatients()">
+        </div>
+        <select id="department-filter" class="input-field" onchange="refreshPatients()">
+          <option value="All">جميع الأقسام الطبية</option>
+          <option value="Cardiology">القلب (Cardiology)</option>
+          <option value="Neurology">الأعصاب (Neurology)</option>
+          <option value="Emergency">الطوارئ (Emergency)</option>
+        </select>
       </div>
-      <select id="department-filter" class="input-field" onchange="refreshPatients()">
-        <option value="All">All Clinical Units</option>
-        <option value="Cardiology">Cardiology</option>
-        <option value="Neurology">Neurology</option>
-        <option value="General Medicine">General Medicine</option>
-      </select>
-    </div>
 
-    <div class="glass-table-deck">
-      <table>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Patient Identity</th>
-            <th>Age / Gender</th>
-            <th>Department</th>
-            <th>Clinical Condition</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="patient-table-body"></tbody>
-      </table>
-    </div>
+      <div class="glass-table-deck">
+        <table>
+          <thead>
+            <tr>
+              <th>الرقم</th>
+              <th>اسم المريض</th>
+              <th>العمر / الجنس</th>
+              <th>القسم</th>
+              <th>الحالة والتشخيص</th>
+              <th>الإجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="patient-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 2. قسم الصيدلية والمستحضرات التجميلية -->
+    <section id="tab-pharmacy" class="module-section">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3>مخزون الأدوية والمستحضرات التجميلية</h3>
+        <button class="btn btn-primary" onclick="alert('خاصية إضافة دواء جديد جاهزة بالـ API')"><i class="fa-solid fa-plus"></i> إضافة صنف</button>
+      </div>
+      <div class="glass-table-deck">
+        <table>
+          <thead>
+            <tr>
+              <th>الصنف</th>
+              <th>التصنيف</th>
+              <th>السعر</th>
+              <th>المخزون المتوفر</th>
+              <th>النوع</th>
+            </tr>
+          </thead>
+          <tbody id="pharmacy-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 3. قسم المختبر والتحاليل الطبية -->
+    <section id="tab-lab" class="module-section">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3>دليل التحاليل المخبرية وطلبات الفحص</h3>
+        <button class="btn btn-primary" onclick="alert('خاصية إضافة فحص جاهزة بالـ API')"><i class="fa-solid fa-plus"></i> طلب تحليل</button>
+      </div>
+      <div class="glass-table-deck">
+        <table>
+          <thead>
+            <tr>
+              <th>اسم التحليل</th>
+              <th>القسم</th>
+              <th>نوع العينة</th>
+              <th>التكلفة</th>
+            </tr>
+          </thead>
+          <tbody id="lab-table-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4. قسم التمريض المنزلي -->
+    <section id="tab-nursing" class="module-section">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3>طلبات الرعاية والتمريض المنزلي (Home Care)</h3>
+        <button class="btn btn-primary" onclick="alert('حجز ممرض منزلي جاهز بالـ API')"><i class="fa-solid fa-plus"></i> حجز زيارة</button>
+      </div>
+      <div class="glass-table-deck">
+        <table>
+          <thead>
+            <tr>
+              <th>المريض</th>
+              <th>الهاتف</th>
+              <th>العنوان</th>
+              <th>الرعاية المطلوبة</th>
+              <th>الحالة</th>
+            </tr>
+          </thead>
+          <tbody id="nursing-table-body">
+            <tr>
+              <td>عبدالرحمن خالد</td>
+              <td>0501234567</td>
+              <td>الرياض، حي الملقا</td>
+              <td>تضميد جروح ومتابعة سكري</td>
+              <td><span class="tag-dept">مجدولة</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </main>
 
-  <!-- Admission Modal -->
+  <!-- نافذة تسجيل مريض -->
   <div class="veil" id="modal-admission">
     <div class="modal-frame">
       <div class="modal-head">
-        <span>Admit New Patient</span>
+        <span>تسجيل وتنويم مريض جديد</span>
         <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeModal('modal-admission')"></i>
       </div>
       <form onsubmit="handleAdmissionSubmit(event)">
-        <div style="margin-bottom:14px;">
-          <label style="font-size:0.8rem; color:var(--text-muted);">Legal Full Name</label>
-          <input type="text" id="f-name" required class="input-field" placeholder="Ahmed Ali" style="margin-top:6px;" />
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.8rem; color:var(--text-muted);">اسم المريض الكامل</label>
+          <input type="text" id="f-name" required class="input-field" placeholder="مثال: أحمد علي" />
         </div>
-        <div style="display:flex; gap:12px; margin-bottom:14px;">
+        <div style="display:flex; gap:10px; margin-bottom:12px;">
           <div style="flex:1;">
-            <label style="font-size:0.8rem; color:var(--text-muted);">Age</label>
-            <input type="number" id="f-age" min="0" max="130" value="35" required class="input-field" style="margin-top:6px;" />
+            <label style="font-size:0.8rem; color:var(--text-muted);">العمر</label>
+            <input type="number" id="f-age" min="1" max="120" value="35" required class="input-field" />
           </div>
           <div style="flex:1;">
-            <label style="font-size:0.8rem; color:var(--text-muted);">Gender</label>
-            <select id="f-gender" class="input-field" style="margin-top:6px;"><option>Male</option><option>Female</option></select>
+            <label style="font-size:0.8rem; color:var(--text-muted);">الجنس</label>
+            <select id="f-gender" class="input-field"><option value="Male">ذكر</option><option value="Female">أنثى</option></select>
           </div>
         </div>
-        <div style="margin-bottom:14px;">
-          <label style="font-size:0.8rem; color:var(--text-muted);">Department</label>
-          <select id="f-dept" class="input-field" style="margin-top:6px; max-width:100%;">
-            <option>Cardiology</option><option>Neurology</option><option>General Medicine</option>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.8rem; color:var(--text-muted);">القسم الطبي</label>
+          <select id="f-dept" class="input-field" style="max-width:100%;">
+            <option value="Cardiology">القلب (Cardiology)</option>
+            <option value="Neurology">الأعصاب (Neurology)</option>
+            <option value="Emergency">الطوارئ (Emergency)</option>
           </select>
         </div>
-        <div style="margin-bottom:18px;">
-          <label style="font-size:0.8rem; color:var(--text-muted);">Condition / Diagnosis</label>
-          <input type="text" id="f-cond" required class="input-field" placeholder="Arrhythmia" style="margin-top:6px;" />
+        <div style="margin-bottom:16px;">
+          <label style="font-size:0.8rem; color:var(--text-muted);">التشخيص الأولي</label>
+          <input type="text" id="f-cond" required class="input-field" placeholder="مثال: عدم انتظام ضربات القلب" />
         </div>
-        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Commit Patient Record</button>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">حفظ في السيرفر</button>
       </form>
     </div>
   </div>
 
-  <!-- Cloning (Copy Constructor) Modal -->
+  <!-- نافذة نسخ المريض (Copy Constructor) -->
   <div class="veil" id="modal-clone">
     <div class="modal-frame">
       <div class="modal-head">
-        <span>Clone Patient (Copy Constructor)</span>
+        <span>مشيد النسخ (Copy Constructor)</span>
         <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeModal('modal-clone')"></i>
       </div>
-      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:16px;">
-        Web abstraction of C# <code>Patient(Patient other)</code> copy constructor.
-      </p>
       <form onsubmit="handleCloneSubmit(event)">
         <input type="hidden" id="fc-id" />
-        <div style="margin-bottom:14px;">
-          <label style="font-size:0.8rem; color:var(--text-muted);">Clone Target Legal Name</label>
-          <input type="text" id="fc-name" required class="input-field" style="margin-top:6px;" />
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.8rem; color:var(--text-muted);">الاسم للنسخة الجديدة</label>
+          <input type="text" id="fc-name" required class="input-field" />
         </div>
-        <div style="margin-bottom:18px;">
-          <label style="font-size:0.8rem; color:var(--text-muted);">New Condition</label>
-          <input type="text" id="fc-cond" required class="input-field" style="margin-top:6px;" />
+        <div style="margin-bottom:16px;">
+          <label style="font-size:0.8rem; color:var(--text-muted);">تعديل الحالة الصحية</label>
+          <input type="text" id="fc-cond" required class="input-field" />
         </div>
-        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Execute Independent Clone</button>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">إنشاء السجل المنسوخ</button>
       </form>
     </div>
   </div>
 
-  <!-- CalculateBill Modal -->
+  <!-- نافذة الفاتورة الموحدة الشاملة -->
   <div class="veil" id="modal-bill">
     <div class="modal-frame">
       <div class="modal-head">
-        <span>Calculate Inpatient Bill</span>
+        <span>حساب الفاتورة الموحدة (Unified Billing)</span>
         <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeModal('modal-bill')"></i>
       </div>
       <form onsubmit="handleBillingSubmit(event)">
         <input type="hidden" id="fb-id" />
-        <div style="margin-bottom:14px;">
-          <label style="font-size:0.8rem; color:var(--text-muted);">Inpatient Stay (Number of Days)</label>
-          <input type="number" id="fb-days" min="1" value="4" required class="input-field" style="margin-top:6px;" />
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.8rem; color:var(--text-muted);">أيام التنويم (Days)</label>
+          <input type="number" id="fb-days" min="1" value="4" required class="input-field" />
         </div>
-        <div style="margin-bottom:18px;">
-          <label style="font-size:0.8rem; color:var(--text-muted);">Daily Inpatient Rate ($)</label>
-          <input type="number" id="fb-rate" value="150" required class="input-field" style="margin-top:6px;" />
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.8rem; color:var(--text-muted);">تكلفة اليوم الواحد ($)</label>
+          <input type="number" id="fb-rate" value="150" required class="input-field" />
         </div>
-        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Generate & Post Invoice</button>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.8rem; color:var(--text-muted);">إضافات أدوية وتحاليل ($)</label>
+          <input type="number" id="fb-extras" value="65" class="input-field" />
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">اعتماد الفاتورة</button>
       </form>
     </div>
   </div>
 
-  <!-- Universal Setup Wizard Modal -->
+  <!-- معالج إعداد وتخصيص المستشفى بالكامل (Setup Wizard) -->
   <div class="veil" id="modal-config">
     <div class="modal-frame">
       <div class="modal-head">
-        <span>Hospital Setup Wizard</span>
+        <span>معالج إعداد وتخصيص المستشفى (Setup Wizard)</span>
         <i class="fa-solid fa-xmark" style="cursor: pointer;" onclick="closeModal('modal-config')"></i>
       </div>
       <form onsubmit="handleConfigSubmit(event)">
-        <div style="margin-bottom:14px;">
-          <label style="font-size:0.8rem; color:var(--text-muted);">Hospital Name</label>
-          <input type="text" id="cfg-name" required class="input-field" style="margin-top:6px;" />
+        <div style="margin-bottom:12px;">
+          <label style="font-size:0.8rem; color:var(--text-muted);">اسم المنشأة الطبية</label>
+          <input type="text" id="cfg-name" required class="input-field" />
         </div>
-        <div style="display:flex; gap:12px; margin-bottom:14px;">
+        <div style="display:flex; gap:10px; margin-bottom:12px;">
           <div style="flex:1;">
-            <label style="font-size:0.8rem; color:var(--text-muted);">Currency Symbol</label>
-            <input type="text" id="cfg-curr" value="$" class="input-field" style="margin-top:6px;" />
+            <label style="font-size:0.8rem; color:var(--text-muted);">رمز العملة</label>
+            <input type="text" id="cfg-curr" value="$" class="input-field" />
           </div>
           <div style="flex:1;">
-            <label style="font-size:0.8rem; color:var(--text-muted);">Base Fee ($)</label>
-            <input type="number" id="cfg-fee" value="50" class="input-field" style="margin-top:6px;" />
+            <label style="font-size:0.8rem; color:var(--text-muted);">رسوم الكشف ($)</label>
+            <input type="number" id="cfg-fee" value="50" class="input-field" />
           </div>
         </div>
-        <div style="margin-bottom:18px;">
-          <label style="font-size:0.8rem; color:var(--text-muted);">Daily Stay Rate ($)</label>
-          <input type="number" id="cfg-rate" value="150" class="input-field" style="margin-top:6px;" />
+        <div style="margin-bottom:16px;">
+          <label style="font-size:0.8rem; color:var(--text-muted);">سعر التنويم اليومي ($)</label>
+          <input type="number" id="cfg-rate" value="150" class="input-field" />
         </div>
-        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Save Hospital Configuration</button>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">حفظ وتطبيق الهوية فوراً</button>
       </form>
     </div>
   </div>
 
   <script>
     let activeConfig = {};
-    let isRtl = false;
+    let isRtl = true;
 
     function init3D() {
       const container = document.getElementById('canvas-viewport');
@@ -364,7 +466,7 @@
     }
 
     async function fetchConfig() {
-      const res = await fetch('/api/hospital/config');
+      const res = await fetch('/api/config');
       activeConfig = await res.json();
       document.getElementById('dyn-brand-name').innerText = activeConfig.hospitalName;
       document.getElementById('dyn-view-title').innerText = activeConfig.hospitalName;
@@ -378,8 +480,8 @@
       const res = await fetch('/api/dashboard/stats');
       const stats = await res.json();
       document.getElementById('st-patients').innerText = stats.totalPatients;
-      document.getElementById('st-depts').innerText = stats.activeDepartments;
       document.getElementById('st-doctors').innerText = stats.doctorsOnDuty;
+      document.getElementById('st-labs').innerText = stats.pendingLabs;
       document.getElementById('st-revenue').innerText = `${activeConfig.currencySymbol || '$'}${stats.totalRevenue.toLocaleString()}`;
     }
 
@@ -395,24 +497,19 @@
       const tbody = document.getElementById('patient-table-body');
       tbody.innerHTML = '';
 
-      if (!patients || patients.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:30px;">No patient records found.</td></tr>`;
-        return;
-      }
-
       patients.forEach(p => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>#${p.id}</strong></td>
           <td><strong>${p.name}</strong></td>
-          <td>${p.age} yrs • ${p.gender}</td>
+          <td>${p.age} سنة • ${p.gender === 'Male' ? 'ذكر' : 'أنثى'}</td>
           <td><span class="tag-dept">${p.department}</span></td>
           <td>${p.medicalCondition}</td>
           <td>
             <div class="action-group">
-              <button class="icon-button" title="Calculate Bill (CalculateBill)" onclick="openBillModal(${p.id})"><i class="fa-solid fa-calculator"></i></button>
-              <button class="icon-button" title="Clone Record (Copy Constructor)" onclick="openCloneModal(${p.id}, '${p.name}')"><i class="fa-solid fa-copy"></i></button>
-              <button class="icon-button" style="color:#f43f5e;" title="Discharge" onclick="deletePatient(${p.id})"><i class="fa-solid fa-trash-can"></i></button>
+              <button class="icon-button" title="حساب الفاتورة (CalculateBill)" onclick="openBillModal(${p.id})"><i class="fa-solid fa-calculator"></i></button>
+              <button class="icon-button" title="نسخ المريض (Copy Constructor)" onclick="openCloneModal(${p.id}, '${p.name}')"><i class="fa-solid fa-copy"></i></button>
+              <button class="icon-button" style="color:#f43f5e;" title="حذف" onclick="deletePatient(${p.id})"><i class="fa-solid fa-trash"></i></button>
             </div>
           </td>
         `;
@@ -420,12 +517,54 @@
       });
     }
 
+    async function fetchPharmacy() {
+      const res = await fetch('/api/pharmacy');
+      const items = await res.json();
+      const tbody = document.getElementById('pharmacy-table-body');
+      tbody.innerHTML = '';
+      items.forEach(i => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${i.name}</strong></td>
+          <td>${i.category}</td>
+          <td>$${i.sellingPrice}</td>
+          <td><span class="tag-dept">${i.stockQuantity} وحدة</span></td>
+          <td>${i.isCosmetic ? 'تجميلي / عناية' : 'دواء سريري'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function fetchLab() {
+      const res = await fetch('/api/laboratory/tests');
+      const items = await res.json();
+      const tbody = document.getElementById('lab-table-body');
+      tbody.innerHTML = '';
+      items.forEach(i => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${i.name}</strong></td>
+          <td>${i.category}</td>
+          <td>${i.sampleType}</td>
+          <td><strong>$${i.price}</strong></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.module-section').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      el.classList.add('active');
+    }
+
     function openAdmissionModal() { document.getElementById('modal-admission').classList.add('open'); }
     function openConfigModal() { document.getElementById('modal-config').classList.add('open'); }
     function openCloneModal(id, name) {
       document.getElementById('fc-id').value = id;
-      document.getElementById('fc-name').value = `${name} (Clone)`;
-      document.getElementById('fc-cond').value = "Stable";
+      document.getElementById('fc-name').value = `${name} (نسخة)`;
+      document.getElementById('fc-cond').value = "مستقرة (Stable)";
       document.getElementById('modal-clone').classList.add('open');
     }
     function openBillModal(id) {
@@ -474,35 +613,34 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           numberOfDays: parseInt(document.getElementById('fb-days').value),
-          customDailyRate: parseFloat(document.getElementById('fb-rate').value)
+          dailyRate: parseFloat(document.getElementById('fb-rate').value),
+          pharmacyAmount: parseFloat(document.getElementById('fb-extras').value)
         })
       });
       const r = await res.json();
-      alert(`Invoice: #${r.invoiceNumber}\\nPatient: ${r.patientName}\\nInpatient Days: ${r.numberOfDays} (Subtotal: $${r.inpatientSubtotal})\\nBase Consultation: $${r.consultationFee}\\nTotal Payable: $${r.totalPayable}`);
+      alert(`فاتورة رقم: #${r.invoiceNumber}\nالمريض: ${r.patientName}\nأيام التنويم: ${r.inpatientDays} يوم\nرسوم الكشف: $${r.consultationFee}\nالإجمالي المطلوب: $${r.totalPayable}`);
       closeModal('modal-bill');
       fetchTelemetry();
     }
 
     async function handleConfigSubmit(e) {
       e.preventDefault();
-      const payload = {
-        hospitalName: document.getElementById('cfg-name').value,
-        currencySymbol: document.getElementById('cfg-curr').value,
-        baseConsultationFee: parseFloat(document.getElementById('cfg-fee').value),
-        defaultDailyInpatientRate: parseFloat(document.getElementById('cfg-rate').value)
-      };
-      await fetch('/api/hospital/config', {
+      await fetch('/api/config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          hospitalName: document.getElementById('cfg-name').value,
+          currencySymbol: document.getElementById('cfg-curr').value,
+          baseConsultationFee: parseFloat(document.getElementById('cfg-fee').value),
+          defaultDailyInpatientRate: parseFloat(document.getElementById('cfg-rate').value)
+        })
       });
       closeModal('modal-config');
-      fetchConfig();
-      fetchTelemetry();
+      refreshAll();
     }
 
     async function deletePatient(id) {
-      if (confirm(`Discharge patient #${id}?`)) {
+      if (confirm(`تسجيل خروج للمريض #${id}؟`)) {
         await fetch(`/api/patients/${id}`, { method: 'DELETE' });
         refreshAll();
       }
@@ -518,6 +656,8 @@
       await fetchConfig();
       await fetchTelemetry();
       await refreshPatients();
+      await fetchPharmacy();
+      await fetchLab();
     }
 
     window.addEventListener('DOMContentLoaded', () => {
